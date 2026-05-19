@@ -450,6 +450,9 @@
       </div>
     </div>
     <div style="display:flex;gap:8px">
+      <button class="hdr-btn" onclick="showScreen('screen-fuel')" aria-label="Fuel log">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h12"/><path d="M4 9h10v13H4z"/><path d="M14 13h2a2 2 0 012 2v1a2 2 0 002 2h0a2 2 0 002-2V9.83a2 2 0 00-.59-1.42L18 6"/><path d="M5 4a1 1 0 011-1h6a1 1 0 011 1v5H5z"/></svg>
+      </button>
       <button class="hdr-btn" onclick="showScreen('screen-history')" aria-label="Load history">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       </button>
@@ -536,8 +539,16 @@
           <select id="f-haul"><option value="">Select commodity...</option></select>
         </div>
         <div class="field">
+          <label>Hauling for</label>
+          <select id="f-customer"><option value="">Select customer...</option></select>
+        </div>
+        <div class="field">
           <label>Tons hauled</label>
           <input type="number" id="f-tons" placeholder="e.g. 24.5" step="0.1" min="0" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>BOL number</label>
+          <input type="text" id="f-bol" placeholder="Bill of Lading # (optional)">
         </div>
         <div class="field">
           <label>Notes</label>
@@ -613,6 +624,77 @@
     </div>
   </div>
 
+  <!-- ═══════════════ FUEL SCREEN ═══════════════ -->
+  <div class="screen" id="screen-fuel">
+    <div class="body">
+      <div class="section-lbl" style="margin-top:4px">Log fuel purchase</div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;line-height:1.5">
+        Track every fuel-up for IFTA reporting. Records gallons, location, and price.
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>Driver <span class="req">*</span></label>
+          <select id="fuel-driver"><option value="">Select driver...</option></select>
+        </div>
+        <div class="field">
+          <label>Truck <span class="req">*</span></label>
+          <select id="fuel-truck"><option value="">Select truck...</option></select>
+        </div>
+        <div class="field">
+          <label>Gallons <span class="req">*</span></label>
+          <input type="number" id="fuel-gallons" placeholder="e.g. 87.5" step="0.01" min="0" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Total cost (optional)</label>
+          <input type="number" id="fuel-cost" placeholder="e.g. 312.50" step="0.01" min="0" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>State <span class="req">*</span></label>
+          <select id="fuel-state">
+            <option value="">Select state...</option>
+            <option value="IA">Iowa</option>
+            <option value="NE">Nebraska</option>
+            <option value="MN">Minnesota</option>
+            <option value="MO">Missouri</option>
+            <option value="IL">Illinois</option>
+            <option value="SD">South Dakota</option>
+            <option value="WI">Wisconsin</option>
+            <option value="KS">Kansas</option>
+            <option value="ND">North Dakota</option>
+            <option value="OK">Oklahoma</option>
+            <option value="TX">Texas</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Station / location (optional)</label>
+          <input type="text" id="fuel-station" placeholder="e.g. Casey's Ames, Pilot West DSM">
+        </div>
+        <div class="field">
+          <label>Odometer (optional)</label>
+          <input type="number" id="fuel-odo" placeholder="Current truck miles" step="1" min="0" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="fuel-notes" placeholder="Receipt #, card last 4, etc."></textarea>
+        </div>
+      </div>
+      <div class="err-msg" id="fuel-err">Please fill in all required fields.</div>
+      <button class="btn-primary" onclick="submitFuel()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Save fuel entry
+      </button>
+      <button class="btn-secondary" style="margin-top:8px" onclick="showScreen('screen-form')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to form
+      </button>
+
+      <div class="section-lbl" style="margin-top:18px">Recent fuel entries</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:8px">From this device. <a href="#" onclick="refreshFuelFromSheet();return false;" style="color:var(--green);text-decoration:underline">Pull fleet from sheet</a></div>
+      <div id="fuel-list"></div>
+    </div>
+  </div>
+
   <!-- ═══════════════ SETTINGS SCREEN ═══════════════ -->
   <div class="screen" id="screen-settings">
     <div class="nav-tabs">
@@ -630,6 +712,14 @@
         <div class="add-row">
           <input type="text" id="new-driver" placeholder="Full name">
           <button onclick="addSimple('drivers','new-driver')">Add</button>
+        </div>
+      </div>
+      <div class="section-lbl">Customers (who you haul for)</div>
+      <div class="settings-card">
+        <div id="list-customers"></div>
+        <div class="add-row">
+          <input type="text" id="new-customer" placeholder="e.g. MW Ag Supply, Anderson Trucking">
+          <button onclick="addSimple('customers','new-customer')">Add</button>
         </div>
       </div>
     </div>
@@ -777,7 +867,7 @@
 // Paste the URL Google gave you when you deployed your Apps Script.
 // Looks like: https://script.google.com/macros/s/AKfyc.../exec
 var EMBED_APPS_SCRIPT_URL = `
-https://script.google.com/macros/s/AKfycbwkvlnKtpEXTu9xiQli4wUQCL9q4MQEiM8JO4RBOjE_oxePiU82MbjYq-U2lQsTNkAINA/exec
+https://script.google.com/macros/s/AKfycbz2qKiAkAjWil097u17C_JeB3fYGlocPRVk7Z7o4ezE7kknb81QBCAEKo9LWSjeXAxjxQ/exec
 `;
 
 // ─── Google Maps API Key ──────────────────────────────────────
@@ -883,6 +973,7 @@ var DATA = {
   trucks:   ['Truck 1', 'Truck 2'],
   trailers: ['Trailer A', 'Trailer B'],
   haul:     ['Corn', 'Soybeans', 'Wheat', 'Gravel', 'Crushed limestone', 'Sand', 'Topsoil', 'Dirt', 'Fertilizer'],
+  customers: ['Tri-County Ag', 'MW Ag Supply', 'Anderson Trucking'],
   starts:   [
     {name: 'Casey Elevator', addr: '123 Main St, Casey, IA 50048'},
     {name: 'Adair Grain', addr: '456 County Rd, Adair, IA 50002'}
@@ -1543,6 +1634,7 @@ function showScreen(id) {
   if (id === 'screen-queue') renderQueueScreen();
   if (id === 'screen-settings') updateQueueBanner();
   if (id === 'screen-history') renderHistoryScreen();
+  if (id === 'screen-fuel') { renderFuelDropdowns(); renderFuelList(); }
 }
 
 // ── SETTINGS TABS ─────────────────────────────────────────────
@@ -1678,16 +1770,21 @@ function retestAllGeocodes() {
 }
 
 function renderAll() {
+  // Ensure customers array exists for older imported data
+  if (!Array.isArray(DATA.customers)) DATA.customers = [];
+
   renderSelect('f-driver', DATA.drivers, false);
   renderSelect('f-truck', DATA.trucks, false);
   renderSelect('f-trailer', DATA.trailers, false);
   renderSelect('f-haul', DATA.haul, false);
+  renderSelect('f-customer', DATA.customers, false);
   renderSelect('f-start', DATA.starts, true);
   renderSelect('f-stop', DATA.stops, true);
   renderSimpleList('list-drivers', 'drivers');
   renderSimpleList('list-trucks', 'trucks');
   renderSimpleList('list-trailers', 'trailers');
   renderSimpleList('list-haul', 'haul');
+  renderSimpleList('list-customers', 'customers');
   renderLocList('list-starts', 'starts');
   renderLocList('list-stops', 'stops');
 }
@@ -1731,7 +1828,8 @@ function submitLoad(repeat) {
   var driver  = gv('f-driver'),  truck   = gv('f-truck'),
       trailer = gv('f-trailer'), start   = gv('f-start'),
       stop    = gv('f-stop'),    haul    = gv('f-haul'),
-      notes   = gv('f-notes');
+      notes   = gv('f-notes'),   customer = gv('f-customer'),
+      bol     = gv('f-bol');
   var tonsRaw = gv('f-tons');
   var tons = tonsRaw === '' ? null : parseFloat(tonsRaw);
   if (tons != null && (isNaN(tons) || tons < 0)) tons = null;
@@ -1754,7 +1852,9 @@ function submitLoad(repeat) {
     stopLocation: stop, stopLabel,
     hauling: haul, notes,
     miles: CURRENT_MILES,
-    tons: tons
+    tons: tons,
+    customer: customer,
+    bol: bol
   };
   lastPayload = {payload, startLabel, stopLabel};
 
@@ -1891,7 +1991,9 @@ function showSuccess(payload, startLabel, stopLabel, offline) {
     srow('Route', startLabel + ' \u2192 ' + stopLabel) +
     (payload.miles != null ? srow('Distance', payload.miles.toFixed(1) + ' mi') : '') +
     srow('Hauling', payload.hauling) +
+    (payload.customer ? srow('For', payload.customer) : '') +
     (payload.tons != null ? srow('Tons', payload.tons.toFixed(1)) : '') +
+    (payload.bol ? srow('BOL #', payload.bol) : '') +
     (payload.notes ? srow('Notes', payload.notes) : '');
 }
 
@@ -1927,6 +2029,8 @@ function appendLocalHistory(payload, queuedOffline) {
     miles: payload.miles,
     hauling: payload.hauling,
     tons: payload.tons,
+    customer: payload.customer,
+    bol: payload.bol,
     notes: payload.notes,
     queued: !!queuedOffline,
     source: 'local'
@@ -2010,6 +2114,8 @@ function renderHistoryScreen() {
           (h.miles != null && h.miles !== '' ? ' &middot; <span class="lbl">Miles:</span> ' + esc(String(h.miles)) : '') +
           (h.tons != null && h.tons !== '' ? ' &middot; <span class="lbl">Tons:</span> ' + esc(String(h.tons)) : '') +
           ' &middot; <span class="lbl">Hauling:</span> ' + esc(h.hauling || '') +
+          (h.customer ? ' &middot; <span class="lbl">For:</span> ' + esc(h.customer) : '') +
+          (h.bol ? ' &middot; <span class="lbl">BOL:</span> ' + esc(h.bol) : '') +
           (h.notes ? '<br><span class="lbl">Notes:</span> ' + esc(h.notes) : '') +
           (h.queued ? '<br><span style="color:#e6a800;font-weight:600">&#9203; Queued (not yet sent)</span>' : '') +
         '</div>';
@@ -2057,6 +2163,8 @@ function refreshHistoryFromSheet() {
           miles: row.miles,
           hauling: row.hauling || '',
           tons: row.tons,
+          customer: row.customer || '',
+          bol: row.bol || '',
           notes: row.notes || '',
           source: 'sheet'
         };
@@ -2072,17 +2180,178 @@ function refreshHistoryFromSheet() {
     });
 }
 
+// ── FUEL TRACKING ─────────────────────────────────────────────
+var LOCAL_FUEL = [];
+var SHEET_FUEL = [];
+
+function loadLocalFuel() {
+  try {
+    var f = localStorage.getItem('la_fuel');
+    if (f) LOCAL_FUEL = JSON.parse(f);
+  } catch(e) {}
+}
+
+function saveLocalFuel() {
+  if (LOCAL_FUEL.length > 200) LOCAL_FUEL = LOCAL_FUEL.slice(-200);
+  try { localStorage.setItem('la_fuel', JSON.stringify(LOCAL_FUEL)); } catch(e) {}
+}
+
+function renderFuelDropdowns() {
+  renderSelect('fuel-driver', DATA.drivers || [], false);
+  renderSelect('fuel-truck', DATA.trucks || [], false);
+}
+
+function submitFuel() {
+  var driver  = gv('fuel-driver'),
+      truck   = gv('fuel-truck'),
+      state   = gv('fuel-state'),
+      station = gv('fuel-station'),
+      notes   = gv('fuel-notes');
+  var gallons = parseFloat(gv('fuel-gallons'));
+  var cost    = gv('fuel-cost') === '' ? null : parseFloat(gv('fuel-cost'));
+  var odo     = gv('fuel-odo') === '' ? null : parseFloat(gv('fuel-odo'));
+
+  var err = document.getElementById('fuel-err');
+  if (!driver || !truck || !state || isNaN(gallons) || gallons <= 0) {
+    err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+
+  var payload = {
+    type: 'fuel',
+    timestamp: new Date().toISOString(),
+    driver: driver,
+    truck: truck,
+    gallons: gallons,
+    cost: cost,
+    state: state,
+    station: station,
+    odometer: odo,
+    notes: notes
+  };
+
+  // Record locally regardless of network
+  LOCAL_FUEL.push(Object.assign({source: 'local'}, payload));
+  saveLocalFuel();
+
+  // Send to Apps Script — same endpoint, the script routes by type
+  var offline = sendPayload(payload);
+
+  // Reset form
+  document.getElementById('fuel-gallons').value = '';
+  document.getElementById('fuel-cost').value = '';
+  document.getElementById('fuel-station').value = '';
+  document.getElementById('fuel-odo').value = '';
+  document.getElementById('fuel-notes').value = '';
+  document.getElementById('fuel-state').value = '';
+
+  alert(offline
+    ? 'Fuel entry saved on device — will sync when online.'
+    : 'Fuel entry saved.');
+  renderFuelList();
+}
+
+function renderFuelList() {
+  var c = document.getElementById('fuel-list');
+  if (!c) return;
+  var entries = SHEET_FUEL.length ? SHEET_FUEL.slice() : LOCAL_FUEL.slice();
+  if (entries.length === 0) {
+    c.innerHTML = '<div class="queue-empty" style="padding:20px">No fuel entries yet.</div>';
+    return;
+  }
+  // Group by day, like load history
+  var groups = {};
+  var order = [];
+  entries.forEach(function(f) {
+    var d = f.timestamp ? new Date(f.timestamp) : null;
+    if (!d || isNaN(d)) return;
+    var key = d.getFullYear() + '-' +
+              String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+    if (!groups[key]) { groups[key] = {date: d, items: []}; order.push(key); }
+    groups[key].items.push(f);
+  });
+  order.sort(function(a, b) { return b.localeCompare(a); });
+  order.forEach(function(k) {
+    groups[k].items.sort(function(a, b) { return (b.timestamp || '').localeCompare(a.timestamp || ''); });
+  });
+
+  c.innerHTML = '';
+  order.forEach(function(key) {
+    var g = groups[key];
+    var totalGal = 0, totalCost = 0, hasCost = false;
+    g.items.forEach(function(f) {
+      var ga = parseFloat(f.gallons); if (!isNaN(ga)) totalGal += ga;
+      var co = parseFloat(f.cost); if (!isNaN(co)) { totalCost += co; hasCost = true; }
+    });
+    var header = document.createElement('div');
+    header.className = 'history-day-header';
+    header.innerHTML =
+      '<div class="history-day-title">' + esc(formatDayHeader(g.date)) + '</div>' +
+      '<div class="history-day-totals">' +
+        g.items.length + ' entr' + (g.items.length === 1 ? 'y' : 'ies') +
+        ' &middot; ' + totalGal.toFixed(1) + ' gal' +
+        (hasCost ? ' &middot; $' + totalCost.toFixed(2) : '') +
+      '</div>';
+    c.appendChild(header);
+
+    g.items.forEach(function(f) {
+      var d = f.timestamp ? new Date(f.timestamp) : null;
+      var when = d && !isNaN(d) ? d.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'}) : '';
+      var div = document.createElement('div');
+      div.className = 'history-item ' + (f.source === 'sheet' ? 'from-sheet' : 'from-local');
+      var pricePerGal = (f.cost && f.gallons) ? (f.cost / f.gallons).toFixed(3) : null;
+      div.innerHTML =
+        '<div class="history-item-hdr">' +
+          '<div class="history-item-title">' + esc(f.gallons || '?') + ' gal &middot; ' + esc(f.state || '?') + '</div>' +
+          '<div class="history-item-time">' + esc(when) + '</div>' +
+        '</div>' +
+        '<div class="history-item-detail">' +
+          '<span class="lbl">Driver:</span> ' + esc(f.driver || '') +
+          ' &middot; <span class="lbl">Truck:</span> ' + esc(f.truck || '') +
+          (f.cost != null && f.cost !== '' ? ' &middot; <span class="lbl">Cost:</span> $' + esc(String(f.cost)) : '') +
+          (pricePerGal ? ' &middot; <span class="lbl">$/gal:</span> $' + pricePerGal : '') +
+          (f.station ? '<br><span class="lbl">Station:</span> ' + esc(f.station) : '') +
+          (f.odometer ? ' &middot; <span class="lbl">Odo:</span> ' + esc(String(f.odometer)) : '') +
+          (f.notes ? '<br><span class="lbl">Notes:</span> ' + esc(f.notes) : '') +
+        '</div>';
+      c.appendChild(div);
+    });
+  });
+}
+
+function refreshFuelFromSheet() {
+  var url = getScriptUrl();
+  if (!url) { alert('No Apps Script URL configured.'); return; }
+  if (!isOnline) { alert('Offline — connect to refresh.'); return; }
+  fetchWithTimeout(url + '?action=listFuel&n=100', 12000)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || data.ok !== true || !Array.isArray(data.fuel)) {
+        throw new Error(data && data.error ? data.error : 'Bad response from sheet');
+      }
+      SHEET_FUEL = data.fuel.map(function(row) {
+        return Object.assign({source: 'sheet'}, row);
+      });
+      renderFuelList();
+    })
+    .catch(function(err) {
+      alert('Could not load fuel from sheet: ' + (err.message || err));
+    });
+}
+
 function srow(l, v) {
   return '<div class="s-row"><span class="s-lbl">' + esc(l) + '</span><span class="s-val">' + esc(v) + '</span></div>';
 }
 
 function newLoad() {
   showScreen('screen-form');
-  ['f-driver','f-truck','f-trailer','f-start','f-stop','f-haul'].forEach(function(id) {
+  ['f-driver','f-truck','f-trailer','f-start','f-stop','f-haul','f-customer'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
   document.getElementById('f-notes').value = '';
   document.getElementById('f-tons').value = '';
+  document.getElementById('f-bol').value = '';
   document.getElementById('miles-row').style.display = 'none';
   CURRENT_MILES = null;
 }
@@ -2091,6 +2360,7 @@ function repeatFromSuccess() {
   showScreen('screen-form');
   document.getElementById('f-notes').value = '';
   document.getElementById('f-tons').value = '';
+  document.getElementById('f-bol').value = '';
   submitLoad(false);
 }
 
@@ -2162,6 +2432,7 @@ function importSettings(event) {
 loadStorage();
 loadCaches();
 loadLocalHistory();
+loadLocalFuel();
 renderAll();
 updateOnlineStatus();
 
