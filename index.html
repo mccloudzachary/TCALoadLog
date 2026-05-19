@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a5c2e">
+<title>Load Entry</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --green: #1a5c2e;
+    --green-dark: #134522;
+    --green-light: #eef7f1;
+    --green-mid: #2d7a45;
+    --red: #c0392b;
+    --bg: #f5f5f3;
+    --card: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --text: #1a1a18;
+    --text-2: #5a5a57;
+    --text-3: #9a9a96;
+    --font: 'DM Sans', sans-serif;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  /* HEADER */
+  .hdr {
+    background: var(--green);
+    padding: 14px 16px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .hdr-left { display: flex; align-items: center; gap: 10px; }
+  .hdr-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #fff;
+  }
+  .hdr-title { font-size: 16px; font-weight: 600; color: #fff; }
+  .hdr-sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 1px; }
+  .hdr-btn {
+    background: rgba(255,255,255,0.15); border: none;
+    border-radius: 9px; width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff; font-size: 18px;
+    position: relative;
+  }
+  .hdr-btn .badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #e74c3c; color: #fff;
+    font-size: 10px; font-weight: 600;
+    min-width: 16px; height: 16px;
+    border-radius: 8px; padding: 0 4px;
+    display: none; align-items: center; justify-content: center;
+    border: 2px solid var(--green);
+  }
+  .hdr-btn .badge.show { display: flex; }
+
+  /* TIMESTAMP BAR */
+  .ts-bar {
+    background: var(--green-dark);
+    padding: 7px 16px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: rgba(255,255,255,0.75);
+  }
+  .ts-bar svg { flex-shrink: 0; }
+
+  /* OFFLINE BANNER */
+  .offline-banner {
+    background: #fff3cd; border-bottom: 1px solid #ffc107;
+    padding: 8px 16px; font-size: 12px; color: #856404;
+    display: none; align-items: center; gap: 8px;
+  }
+  .offline-banner.show { display: flex; }
+  .offline-banner svg { flex-shrink: 0; }
+
+  /* QUEUE BANNER */
+  .queue-banner {
+    background: #e8f4fd; border-bottom: 1px solid #90cdf4;
+    padding: 8px 16px; font-size: 12px; color: #1a5276;
+    display: none; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .queue-banner.show { display: flex; }
+  .queue-banner-left { display: flex; align-items: center; gap: 6px; }
+  .queue-banner button {
+    background: #1a5276; color: #fff; border: none;
+    border-radius: 6px; padding: 4px 10px; font-size: 11px;
+    font-weight: 600; cursor: pointer; font-family: var(--font);
+    white-space: nowrap;
+  }
+
+  /* SCREENS */
+  .screen { display: none; flex-direction: column; flex: 1; }
+  .screen.active { display: flex; }
+
+  /* FORM BODY */
+  .body { padding: 16px; display: flex; flex-direction: column; gap: 0; }
+
+  .section-lbl {
+    font-size: 11px; font-weight: 600; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    margin: 16px 0 8px;
+  }
+  .section-lbl:first-child { margin-top: 4px; }
+
+  .card {
+    background: var(--card); border-radius: var(--radius-lg);
+    border: 1px solid var(--border); overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .field {
+    display: flex; flex-direction: column;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field:last-child { border-bottom: none; }
+
+  .field label {
+    font-size: 11px; font-weight: 600; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 5px;
+  }
+  .field label .req { color: var(--red); margin-left: 2px; }
+
+  .field select, .field textarea, .field input[type=text], .field input[type=number] {
+    width: 100%; border: none; outline: none; background: transparent;
+    font-size: 15px; color: var(--text); font-family: var(--font);
+    font-weight: 500; appearance: none; -webkit-appearance: none;
+  }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239a9a96' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0 center;
+    padding-right: 20px;
+    cursor: pointer;
+  }
+  .field select option { color: var(--text); font-weight: 400; }
+  .field textarea { min-height: 60px; resize: vertical; line-height: 1.5; font-size: 14px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; }
+  .two-col .field:first-child { border-right: 1px solid var(--border); }
+
+  /* BUTTONS */
+  .btn-primary {
+    width: 100%; padding: 15px;
+    background: var(--green); color: #fff;
+    border: none; border-radius: var(--radius-lg);
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--font); margin-top: 6px;
+    transition: background 0.15s;
+  }
+  .btn-primary:active { background: var(--green-dark); transform: scale(0.99); }
+
+  .btn-secondary {
+    width: 100%; padding: 13px;
+    background: var(--card); color: var(--green);
+    border: 1.5px solid var(--green); border-radius: var(--radius-lg);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    font-family: var(--font); margin-top: 8px;
+    transition: background 0.15s;
+  }
+  .btn-secondary:active { background: var(--green-light); }
+
+  .err-msg {
+    font-size: 12px; color: var(--red); margin-top: 8px; display: none;
+    padding: 8px 12px; background: #fdf0ef; border-radius: 8px;
+    border: 1px solid #f5c6c2;
+  }
+
+  /* SUCCESS SCREEN */
+  .success-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px 24px; gap: 14px; text-align: center;
+  }
+  .success-icon {
+    width: 68px; height: 68px; background: var(--green-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; color: var(--green);
+  }
+  .success-title { font-size: 20px; font-weight: 600; }
+  .success-sub { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+  .success-offline-note {
+    font-size: 12px; color: #856404; background: #fff3cd;
+    border: 1px solid #ffc107; border-radius: 8px;
+    padding: 8px 12px; width: 100%; text-align: left; line-height: 1.5;
+  }
+  .success-detail {
+    background: var(--card); border-radius: var(--radius-lg);
+    padding: 14px 16px; width: 100%; text-align: left;
+    border: 1px solid var(--border);
+  }
+  .s-row {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 5px 0; font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .s-row:last-child { border-bottom: none; }
+  .s-lbl { color: var(--text-2); flex-shrink: 0; margin-right: 12px; }
+  .s-val { font-weight: 500; text-align: right; word-break: break-word; }
+
+  /* SETTINGS */
+  .nav-tabs {
+    display: flex; background: var(--card);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex: 1; padding: 11px 8px; text-align: center;
+    font-size: 13px; font-weight: 500; color: var(--text-2);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    white-space: nowrap; min-width: 0;
+    transition: color 0.15s;
+  }
+  .nav-tab.active { color: var(--green); border-bottom-color: var(--green); }
+
+  .settings-card {
+    background: var(--card); border-radius: var(--radius-lg);
+    border: 1px solid var(--border); overflow: hidden; margin-bottom: 12px;
+  }
+  .settings-card-hdr {
+    padding: 10px 14px; background: #f9f9f7;
+    font-size: 11px; font-weight: 600; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .item-row {
+    display: flex; align-items: center;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-main { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .del-btn {
+    background: none; border: none; color: var(--text-3);
+    cursor: pointer; padding: 6px; border-radius: 7px;
+    font-size: 15px; line-height: 1; flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+  }
+  .del-btn:active { color: var(--red); background: #fdf0ef; }
+
+  .test-btn {
+    background: var(--green-light); color: var(--green);
+    border: 1px solid var(--green); border-radius: 7px;
+    font-size: 11px; font-weight: 600;
+    padding: 5px 9px; cursor: pointer; font-family: var(--font);
+    flex-shrink: 0; margin-right: 4px;
+  }
+  .test-btn:active { background: var(--green); color: #fff; }
+
+  .geo-pill {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    font-size: 10px; font-weight: 700;
+    text-align: center; line-height: 16px;
+    margin-right: 4px; vertical-align: middle;
+  }
+  .geo-pill.geo-ok  { background: #d4edda; color: #155724; }
+  .geo-pill.geo-unk { background: #f0f0ee; color: var(--text-3); }
+
+  .item-coord {
+    font-size: 10px; color: var(--text-3);
+    margin-top: 3px; font-family: monospace;
+  }
+  .map-link {
+    color: var(--green); text-decoration: underline;
+    margin-left: 4px;
+  }
+
+  .add-row {
+    display: flex; gap: 8px; padding: 10px 14px;
+    background: #f9f9f7; border-top: 1px solid var(--border);
+  }
+  .add-row input {
+    flex: 1; padding: 8px 11px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--text); font-family: var(--font);
+    background: var(--card); outline: none;
+  }
+  .add-row input:focus { border-color: var(--green); }
+  .add-row button {
+    padding: 8px 14px; background: var(--green); color: #fff;
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: var(--font); white-space: nowrap;
+  }
+
+  .add-loc-block {
+    padding: 10px 14px; background: #f9f9f7;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .add-loc-block input {
+    width: 100%; padding: 8px 11px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; color: var(--text); font-family: var(--font);
+    background: var(--card); outline: none;
+  }
+  .add-loc-block input:focus { border-color: var(--green); }
+  .add-loc-block button {
+    padding: 9px; background: var(--green); color: #fff;
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: var(--font);
+  }
+
+  .ac-wrap { position: relative; }
+  .ac-list {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; margin-top: 2px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    max-height: 240px; overflow-y: auto;
+    display: none; z-index: 50;
+  }
+  .ac-list.show { display: block; }
+  .ac-item {
+    padding: 9px 11px; cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.active { background: var(--green-light); }
+  .ac-item-main { font-weight: 500; color: var(--text); }
+  .ac-item-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+  .ac-footer {
+    padding: 6px 11px; font-size: 10px; color: var(--text-3);
+    text-align: right; border-top: 1px solid var(--border);
+    background: #f9f9f7;
+  }
+  .ac-error {
+    padding: 10px 11px; font-size: 12px;
+    color: var(--red); background: #fdf0ef;
+    line-height: 1.4;
+  }
+
+  .url-card {
+    background: var(--card); border-radius: var(--radius-lg);
+    border: 1px solid var(--border); padding: 14px; margin-bottom: 12px;
+  }
+  .url-card .url-lbl { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .url-card input {
+    width: 100%; padding: 9px 11px;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 12px; color: var(--text); font-family: var(--font);
+    background: var(--bg); outline: none;
+  }
+  .url-card input:focus { border-color: var(--green); }
+  .url-card .url-hint { font-size: 11px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
+  .saved-pill {
+    display: inline-block; margin-top: 6px;
+    background: var(--green-light); color: var(--green);
+    font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+  }
+
+  /* QUEUE SCREEN */
+  .queue-item {
+    background: var(--card); border-radius: var(--radius-lg);
+    border: 1px solid var(--border); padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .queue-item-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .queue-item-title { font-size: 14px; font-weight: 600; }
+  .queue-item-time { font-size: 11px; color: var(--text-3); }
+  .queue-item-detail { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+  .queue-empty { text-align: center; padding: 40px 20px; color: var(--text-3); font-size: 14px; }
+
+  .history-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .history-item.from-sheet { border-left: 3px solid var(--green); }
+  .history-item.from-local { border-left: 3px solid #d0d0cc; }
+  .history-item-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .history-item-title { font-size: 14px; font-weight: 600; }
+  .history-item-time { font-size: 11px; color: var(--text-3); }
+  .history-item-detail { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+  .history-item-detail .lbl { color: var(--text-3); }
+
+  .history-day-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 16px 0 8px 0; padding: 0 2px;
+  }
+  .history-day-header:first-child { margin-top: 4px; }
+  .history-day-title {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .history-day-totals {
+    font-size: 11px; color: var(--green); font-weight: 600;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block; margin-right: 4px;
+  }
+  .status-dot.online { background: #27ae60; }
+  .status-dot.offline { background: #e74c3c; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="hdr-title">Load Entry</div>
+        <div class="hdr-sub" id="company-hdr">Your Trucking Co.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="hdr-btn" onclick="showScreen('screen-history')" aria-label="Load history">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </button>
+      <button class="hdr-btn" onclick="showScreen('screen-queue')" aria-label="Pending queue">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <div class="badge" id="queue-badge"></div>
+      </button>
+      <button class="hdr-btn" onclick="showScreen('screen-settings')" aria-label="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- TIMESTAMP BAR -->
+  <div class="ts-bar">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    <span id="ts-display">Loading...</span>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:4px">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-txt"></span>
+    </span>
+  </div>
+
+  <!-- OFFLINE BANNER -->
+  <div class="offline-banner" id="offline-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/><path d="M5 12.55a10.94 10.94 0 015.17-2.39"/><path d="M10.71 5.05A16 16 0 0122.56 9"/><path d="M1.42 9a15.91 15.91 0 014.7-2.88"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+    No signal — loads will be saved and sent when you're back online.
+  </div>
+
+  <!-- QUEUE BANNER -->
+  <div class="queue-banner" id="queue-banner">
+    <div class="queue-banner-left">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      <span id="queue-banner-txt"></span>
+    </div>
+    <button onclick="retryQueue()">Send now</button>
+  </div>
+
+  <!-- ═══════════════ FORM SCREEN ═══════════════ -->
+  <div class="screen active" id="screen-form">
+    <div class="body">
+
+      <div class="section-lbl">Driver &amp; equipment</div>
+      <div class="card">
+        <div class="field">
+          <label>Driver <span class="req">*</span></label>
+          <select id="f-driver"><option value="">Select driver...</option></select>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label>Truck <span class="req">*</span></label>
+            <select id="f-truck"><option value="">Select...</option></select>
+          </div>
+          <div class="field">
+            <label>Trailer <span class="req">*</span></label>
+            <select id="f-trailer"><option value="">Select...</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-lbl">Route</div>
+      <div class="card">
+        <div class="field">
+          <label>Start location <span class="req">*</span></label>
+          <select id="f-start" onchange="updateMiles()"><option value="">Select pickup...</option></select>
+        </div>
+        <div class="field">
+          <label>Stop location <span class="req">*</span></label>
+          <select id="f-stop" onchange="updateMiles()"><option value="">Select destination...</option></select>
+        </div>
+        <div class="field" id="miles-row" style="display:none;flex-direction:row;align-items:center;justify-content:space-between;background:var(--green-light)">
+          <div>
+            <label style="margin-bottom:2px">Distance</label>
+            <span id="miles-display" style="font-size:16px;font-weight:600;color:var(--green)">—</span>
+          </div>
+          <span id="miles-status" style="font-size:11px;color:var(--text-3)"></span>
+        </div>
+      </div>
+
+      <div class="section-lbl">Load details</div>
+      <div class="card">
+        <div class="field">
+          <label>What are you hauling? <span class="req">*</span></label>
+          <select id="f-haul"><option value="">Select commodity...</option></select>
+        </div>
+        <div class="field">
+          <label>Tons hauled</label>
+          <input type="number" id="f-tons" placeholder="e.g. 24.5" step="0.1" min="0" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="f-notes" placeholder="Scale ticket #, special instructions..."></textarea>
+        </div>
+      </div>
+
+      <div class="err-msg" id="err-msg">Please fill in all required fields before submitting.</div>
+
+      <button class="btn-primary" onclick="submitLoad(false)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Submit load
+      </button>
+      <button class="btn-secondary" onclick="submitLoad(true)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Repeat this load
+      </button>
+      <div style="height:20px"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SUCCESS SCREEN ═══════════════ -->
+  <div class="screen" id="screen-success">
+    <div class="success-wrap">
+      <div class="success-icon">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="success-title">Load recorded!</div>
+      <div class="success-sub" id="success-sub">Saved to your sheet.</div>
+      <div class="success-offline-note" id="success-offline-note" style="display:none">
+        &#9888; No signal detected. This load is saved on the device and will automatically send to your sheet when signal returns.
+      </div>
+      <div class="success-detail" id="success-detail"></div>
+      <button class="btn-primary" onclick="newLoad()">New load</button>
+      <button class="btn-secondary" onclick="repeatFromSuccess()">Repeat this load</button>
+      <div style="height:20px"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ QUEUE SCREEN ═══════════════ -->
+  <div class="screen" id="screen-queue">
+    <div class="body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;margin-top:4px">
+        <div class="section-lbl" style="margin:0">Pending loads</div>
+        <button onclick="retryQueue()" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">Retry all</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:14px;line-height:1.5">
+        These loads were saved while offline. They'll send automatically when signal returns, or tap Retry all to send now.
+      </div>
+      <div id="queue-list"></div>
+      <button class="btn-secondary" style="margin-top:8px" onclick="showScreen('screen-form')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to form
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ HISTORY SCREEN ═══════════════ -->
+  <div class="screen" id="screen-history">
+    <div class="body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;margin-top:4px">
+        <div class="section-lbl" style="margin:0">Recent loads</div>
+        <button onclick="refreshHistoryFromSheet()" id="history-refresh-btn" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">Refresh from sheet</button>
+      </div>
+      <div id="history-source-line" style="font-size:11px;color:var(--text-3);margin-bottom:14px;line-height:1.5">
+        Shows loads submitted from this device. Tap "Refresh from sheet" to pull the full fleet history.
+      </div>
+      <div id="history-list"></div>
+      <button class="btn-secondary" style="margin-top:8px" onclick="showScreen('screen-form')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to form
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SETTINGS SCREEN ═══════════════ -->
+  <div class="screen" id="screen-settings">
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="setTab(0)">People</div>
+      <div class="nav-tab" onclick="setTab(1)">Equipment</div>
+      <div class="nav-tab" onclick="setTab(2)">Locations</div>
+      <div class="nav-tab" onclick="setTab(3)">Data</div>
+    </div>
+
+    <!-- TAB: PEOPLE -->
+    <div class="body" id="tab-0">
+      <div class="section-lbl" style="margin-top:6px">Drivers</div>
+      <div class="settings-card">
+        <div id="list-drivers"></div>
+        <div class="add-row">
+          <input type="text" id="new-driver" placeholder="Full name">
+          <button onclick="addSimple('drivers','new-driver')">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: EQUIPMENT -->
+    <div class="body" id="tab-1" style="display:none">
+      <div class="section-lbl" style="margin-top:6px">Trucks</div>
+      <div class="settings-card">
+        <div id="list-trucks"></div>
+        <div class="add-row">
+          <input type="text" id="new-truck" placeholder="e.g. Truck 1, Pete #4">
+          <button onclick="addSimple('trucks','new-truck')">Add</button>
+        </div>
+      </div>
+      <div class="section-lbl">Trailers</div>
+      <div class="settings-card">
+        <div id="list-trailers"></div>
+        <div class="add-row">
+          <input type="text" id="new-trailer" placeholder="e.g. Hopper A, Flatbed 2">
+          <button onclick="addSimple('trailers','new-trailer')">Add</button>
+        </div>
+      </div>
+      <div class="section-lbl">Commodities</div>
+      <div class="settings-card">
+        <div id="list-haul"></div>
+        <div class="add-row">
+          <input type="text" id="new-haul" placeholder="e.g. Corn, Gravel, Dirt">
+          <button onclick="addSimple('haul','new-haul')">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LOCATIONS -->
+    <div class="body" id="tab-2" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+        <div class="section-lbl" style="margin:0">Pickup locations</div>
+        <button onclick="retestAllGeocodes()" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">Re-test all</button>
+      </div>
+      <div class="settings-card">
+        <div id="list-starts"></div>
+        <div class="add-loc-block">
+          <input type="text" id="new-start-name" placeholder="Location name (e.g. Casey Elevator)">
+          <div class="ac-wrap">
+            <input type="text" id="new-start-addr" placeholder="Start typing address or business name..." autocomplete="off" oninput="onAddrInput(this, 'start-ac')" onblur="hideAcSoon('start-ac')">
+            <div class="ac-list" id="start-ac"></div>
+          </div>
+          <button onclick="addLocation('starts','new-start-name','new-start-addr')">Add pickup location</button>
+        </div>
+      </div>
+      <div class="section-lbl">Delivery locations</div>
+      <div class="settings-card">
+        <div id="list-stops"></div>
+        <div class="add-loc-block">
+          <input type="text" id="new-stop-name" placeholder="Location name (e.g. Omaha Terminal)">
+          <div class="ac-wrap">
+            <input type="text" id="new-stop-addr" placeholder="Start typing address or business name..." autocomplete="off" oninput="onAddrInput(this, 'stop-ac')" onblur="hideAcSoon('stop-ac')">
+            <div class="ac-list" id="stop-ac"></div>
+          </div>
+          <button onclick="addLocation('stops','new-stop-name','new-stop-addr')">Add delivery location</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DATA (queue, sync status, export/import, delete locations) -->
+    <div class="body" id="tab-3" style="display:none">
+      <!-- Hidden inputs — referenced by code but never shown to user -->
+      <input type="hidden" id="script-url">
+      <input type="hidden" id="gmaps-key">
+      <input type="hidden" id="company-input">
+      <textarea id="fb-config" style="display:none"></textarea>
+      <span id="url-saved" style="display:none"></span>
+      <span id="gmaps-key-saved" style="display:none"></span>
+
+      <div class="section-lbl" style="margin-top:6px">Cloud sync status</div>
+      <div class="settings-card">
+        <div class="field" style="border:none;flex-direction:row;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div id="fb-status-dot" style="width:10px;height:10px;border-radius:50%;background:#999"></div>
+            <span style="font-size:14px;font-weight:500">Firebase</span>
+          </div>
+          <span id="fb-status-text" style="font-size:12px;color:var(--text-2)">Not configured</span>
+        </div>
+      </div>
+
+      <div class="section-lbl">Queue status</div>
+      <div class="settings-card">
+        <div class="field" style="border:none;flex-direction:row;align-items:center;justify-content:space-between">
+          <span style="font-size:14px;font-weight:500">Unsent loads</span>
+          <span id="queue-count-display" style="font-size:14px;color:var(--text-2)">0</span>
+        </div>
+      </div>
+      <button class="btn-secondary" style="margin-top:4px" onclick="clearQueue()" id="clear-queue-btn">Clear all pending loads</button>
+
+      <div class="section-lbl" style="margin-top:16px">Manage locations</div>
+      <div class="settings-card">
+        <div style="padding:12px 14px;font-size:13px;color:var(--text-2);line-height:1.6;border-bottom:1px solid var(--border)">
+          Wipe all pickup and delivery locations. Useful before re-importing a clean settings file.
+        </div>
+        <div style="padding:12px 14px">
+          <button onclick="deleteAllLocations()" style="width:100%;padding:11px;background:#fdf0ef;color:var(--red);border:1.5px solid var(--red);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font)">Delete all locations</button>
+        </div>
+      </div>
+
+      <div class="section-lbl" style="margin-top:16px">Save &amp; restore settings</div>
+      <div class="settings-card">
+        <div style="padding:12px 14px;font-size:13px;color:var(--text-2);line-height:1.6;border-bottom:1px solid var(--border)">
+          Export saves all drivers, trucks, trailers, locations, and commodities to a file. Import restores them on any device.
+        </div>
+        <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+          <button onclick="exportSettings()" style="width:100%;padding:11px;background:var(--green);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export settings
+          </button>
+          <button onclick="document.getElementById('import-file').click()" style="width:100%;padding:11px;background:var(--card);color:var(--green);border:1.5px solid var(--green);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import settings
+          </button>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importSettings(event)">
+          <div id="import-msg" style="font-size:12px;text-align:center;display:none"></div>
+        </div>
+      </div>
+      <div style="height:8px"></div>
+    </div>
+
+    <div style="padding:0 16px 24px">
+      <button class="btn-primary" onclick="showScreen('screen-form')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to form
+      </button>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+
+<script>
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  EMBEDDED CONFIG — paste your raw values between the BEGIN/END        ║
+// ║  markers below. You can paste exactly what Google/Firebase gives you  ║
+// ║  (full snippets, comments, imports, semicolons — the parser strips    ║
+// ║  the noise). After editing, save and redeploy to Netlify.             ║
+// ║  Every device that opens the app then auto-configures itself.         ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+
+// ─── Apps Script Web App URL ──────────────────────────────────
+// Paste the URL Google gave you when you deployed your Apps Script.
+// Looks like: https://script.google.com/macros/s/AKfyc.../exec
+var EMBED_APPS_SCRIPT_URL = `
+https://script.google.com/macros/s/AKfycbwkvlnKtpEXTu9xiQli4wUQCL9q4MQEiM8JO4RBOjE_oxePiU82MbjYq-U2lQsTNkAINA/exec
+`;
+
+// ─── Google Maps API Key ──────────────────────────────────────
+// Paste the key from Google Cloud Console (starts with AIza...).
+// Leave the placeholder as-is to skip autocomplete.
+var EMBED_GOOGLE_MAPS_KEY = `
+AIzaSyAcJMOrt8HGJ7NMjyZLF9WQlcCxTBZ3yXk
+`;
+
+// ─── Firebase Configuration ───────────────────────────────────
+// Paste the ENTIRE snippet from Firebase Console "Add Firebase to
+// your web app" — including imports, comments, semicolons, etc.
+// The parser will find the config object inside. Leave the
+// placeholder as-is to skip cloud sync.
+var EMBED_FIREBASE_CONFIG = `
+const firebaseConfig = {
+  apiKey: "AIzaSyD14-dB-nIN9zdNLHTnQids6nSiu1Nqe_E",
+  authDomain: "tca-log-book.firebaseapp.com",
+  projectId: "tca-log-book",
+  storageBucket: "tca-log-book.firebasestorage.app",
+  messagingSenderId: "932461305970",
+  appId: "1:932461305970:web:e1d8e8abfc35958a31e2eb"
+};
+`;
+
+// ─── Company Name ─────────────────────────────────────────────
+var EMBED_COMPANY_NAME = 'Tri-County Ag';
+
+// ──────────────────────────────────────────────────────────────
+// Below this line, code parses the pasted values. Don't edit unless
+// you know what you're doing.
+// ──────────────────────────────────────────────────────────────
+
+function _cleanEmbed(s) {
+  if (!s) return '';
+  var t = String(s).trim();
+  // Empty placeholder check
+  if (!t || /^PASTE_/.test(t)) return '';
+  return t;
+}
+
+var EMBEDDED_CONFIG = (function() {
+  var urlRaw = _cleanEmbed(EMBED_APPS_SCRIPT_URL);
+  // If they pasted a longer line, extract just the URL
+  var urlMatch = urlRaw.match(/https?:\/\/[^\s'"`)]+/);
+  var url = urlMatch ? urlMatch[0] : urlRaw;
+
+  var keyRaw = _cleanEmbed(EMBED_GOOGLE_MAPS_KEY);
+  // If they pasted extra text, extract just an AIza... key
+  var keyMatch = keyRaw.match(/AIza[A-Za-z0-9_\-]+/);
+  var key = keyMatch ? keyMatch[0] : keyRaw;
+
+  var fbRaw = _cleanEmbed(EMBED_FIREBASE_CONFIG);
+  var fbCfg = null;
+  if (fbRaw) {
+    // Reuse the same forgiving parser that powers the Setup textarea
+    fbCfg = _parseFirebaseConfigText(fbRaw);
+  }
+
+  return {
+    appsScriptUrl: url,
+    googleMapsApiKey: key,
+    firebaseConfig: fbCfg,
+    companyName: EMBED_COMPANY_NAME || 'Tri-County Ag'
+  };
+})();
+
+// The actual parser logic — also called by the Settings textarea
+function _parseFirebaseConfigText(raw) {
+  if (!raw) return null;
+  // 1. Strip comments
+  var s = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  // 2. Find { ... } block containing apiKey via brace balancing
+  var apiIdx = s.indexOf('apiKey');
+  if (apiIdx < 0) return null;
+  var start = s.lastIndexOf('{', apiIdx);
+  if (start < 0) return null;
+  var depth = 0, end = -1;
+  for (var k = start; k < s.length; k++) {
+    if (s[k] === '{') depth++;
+    else if (s[k] === '}') { depth--; if (depth === 0) { end = k; break; } }
+  }
+  if (end < 0) return null;
+  var objText = s.substring(start, end + 1);
+  // 3. Try strict JSON
+  try { return JSON.parse(objText); } catch(e) {}
+  // 4. JS object literal -> JSON
+  try {
+    var jsonish = objText
+      .replace(/([{,\s])([A-Za-z_$][A-Za-z0-9_$]*)\s*:/g, '$1"$2":')
+      .replace(/:\s*'([^']*)'/g, ': "$1"')
+      .replace(/,(\s*[}\]])/g, '$1');
+    return JSON.parse(jsonish);
+  } catch(e) {
+    return null;
+  }
+}
+// ─────────────────────────────────────────────────────────────
+
+// ── DATA DEFAULTS ─────────────────────────────────────────────
+var DATA = {
+  drivers:  ['Driver 1', 'Driver 2', 'Driver 3'],
+  trucks:   ['Truck 1', 'Truck 2'],
+  trailers: ['Trailer A', 'Trailer B'],
+  haul:     ['Corn', 'Soybeans', 'Wheat', 'Gravel', 'Crushed limestone', 'Sand', 'Topsoil', 'Dirt', 'Fertilizer'],
+  starts:   [
+    {name: 'Casey Elevator', addr: '123 Main St, Casey, IA 50048'},
+    {name: 'Adair Grain', addr: '456 County Rd, Adair, IA 50002'}
+  ],
+  stops: [
+    {name: 'Council Bluffs Terminal', addr: '1000 Port Ave, Council Bluffs, IA 51501'},
+    {name: 'Omaha Terminal', addr: '500 River Rd, Omaha, NE 68102'}
+  ]
+};
+
+var QUEUE = [];
+var lastPayload = {};
+var isOnline = navigator.onLine;
+
+// ── PERSISTENCE ───────────────────────────────────────────────
+function loadStorage() {
+  try {
+    // Local cache of DATA and QUEUE only. All config (URLs, keys, Firebase)
+    // comes from EMBEDDED_CONFIG via getter functions, no DOM, no localStorage.
+    var d = localStorage.getItem('la_data');
+    if (d) DATA = JSON.parse(d);
+    var q = localStorage.getItem('la_queue');
+    if (q) QUEUE = JSON.parse(q);
+
+    // Set company name in header from embedded config
+    var c = EMBEDDED_CONFIG.companyName || 'Your Trucking Co.';
+    var hdr = document.getElementById('company-hdr');
+    if (hdr) hdr.textContent = c;
+
+    // Initialize Firebase if config is embedded
+    if (EMBEDDED_CONFIG.firebaseConfig) {
+      setFbStatus('loading', 'Connecting...');
+      initFirebase(EMBEDDED_CONFIG.firebaseConfig);
+    }
+  } catch(e) {}
+}
+
+function saveData() {
+  try { localStorage.setItem('la_data', JSON.stringify(DATA)); } catch(e) {}
+  // Also push to Firestore if cloud sync is active. Debounced — many
+  // rapid edits become one write.
+  if (FB_READY && !FB_APPLYING_REMOTE) scheduleFbPush();
+}
+function saveQueue() {
+  try { localStorage.setItem('la_queue', JSON.stringify(QUEUE)); } catch(e) {}
+}
+function saveUrl() {
+  var v = document.getElementById('script-url').value.trim();
+  try { localStorage.setItem('la_url', v); document.getElementById('url-saved').style.display = 'inline-block'; } catch(e) {}
+}
+function saveCompany() {
+  var v = document.getElementById('company-input').value.trim() || 'Your Trucking Co.';
+  document.getElementById('company-hdr').textContent = v;
+  try { localStorage.setItem('la_company', v); } catch(e) {}
+}
+
+// ── MILEAGE ENGINE ────────────────────────────────────────────
+// Two-stage: geocode address -> lat/lng (cached forever), then
+// OSRM route lat/lng -> miles (cached per route pair).
+// Both services are free, no API key, no quotas.
+
+var GEO_CACHE = {};   // addr string -> {lat, lng}
+var ROUTE_CACHE = {}; // "lat1,lng1|lat2,lng2" -> miles
+
+function loadCaches() {
+  try {
+    var g = localStorage.getItem('la_geo');
+    if (g) GEO_CACHE = JSON.parse(g);
+    var r = localStorage.getItem('la_routes');
+    if (r) ROUTE_CACHE = JSON.parse(r);
+  } catch(e) {}
+}
+function saveGeo() {
+  try { localStorage.setItem('la_geo', JSON.stringify(GEO_CACHE)); } catch(e) {}
+  if (FB_READY && !FB_APPLYING_REMOTE) scheduleFbPush();
+}
+function saveRoutes() {
+  try { localStorage.setItem('la_routes', JSON.stringify(ROUTE_CACHE)); } catch(e) {}
+  if (FB_READY && !FB_APPLYING_REMOTE) scheduleFbPush();
+}
+
+// Geocode an address. Tries US Census first (best for US addresses, no key,
+// no quotas), then falls back to Nominatim (OpenStreetMap).
+// Returns {lat, lng, source} or null.
+function geocode(addr) {
+  if (!addr) return Promise.resolve(null);
+  var key = addr.trim().toLowerCase();
+  if (GEO_CACHE[key]) return Promise.resolve(GEO_CACHE[key]);
+  if (!isOnline) return Promise.resolve(null);
+
+  // If the address has no state mention at all, assume Iowa (your default
+  // operating region). Prevents Census/Nominatim from picking same-named
+  // streets in Pennsylvania, Texas, etc.
+  var normalized = addr;
+  if (!/\b(IA|Iowa|NE|Nebraska|MN|Minnesota|MO|Missouri|IL|Illinois|SD|South Dakota|WI|Wisconsin|KS|Kansas)\b/i.test(addr)) {
+    normalized = addr.replace(/\s*$/, '') + ', IA';
+  }
+
+  return geocodeCensus(normalized).then(function(pt) {
+    if (pt && isInRegion(pt)) {
+      GEO_CACHE[key] = pt;
+      saveGeo();
+      return pt;
+    }
+    return geocodeNominatim(normalized).then(function(pt2) {
+      if (pt2 && isInRegion(pt2)) {
+        GEO_CACHE[key] = pt2;
+        saveGeo();
+        return pt2;
+      }
+      return null; // give up rather than return a wildly wrong point
+    });
+  });
+}
+
+// Sanity check: did the geocoder put us somewhere in the Midwest?
+// Bounding box covers IA + neighbors (NE, MN, MO, IL, SD, WI, KS).
+function isInRegion(pt) {
+  return pt && pt.lat >= 37 && pt.lat <= 46 && pt.lng >= -98 && pt.lng <= -87;
+}
+
+// US Census Bureau geocoder — great for US street addresses, no key, no quota.
+function geocodeCensus(addr) {
+  var url = 'https://geocoding.geo.census.gov/geocoder/locations/onelineaddress' +
+            '?address=' + encodeURIComponent(addr) +
+            '&benchmark=Public_AR_Current&format=json';
+  return fetchWithTimeout(url, 6000)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var m = data && data.result && data.result.addressMatches;
+      if (!m || !m.length) return null;
+      var c = m[0].coordinates;
+      return {lat: parseFloat(c.y), lng: parseFloat(c.x), source: 'census'};
+    })
+    .catch(function() { return null; });
+}
+
+// Nominatim (OpenStreetMap) — fallback when Census misses.
+// Biased to Iowa-region bounding box.
+function geocodeNominatim(addr) {
+  var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1' +
+            '&countrycodes=us' +
+            '&viewbox=-98,46,-87,37&bounded=0' +
+            '&q=' + encodeURIComponent(addr);
+  return fetchWithTimeout(url, 6000, {headers: {'Accept': 'application/json'}})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.length) return null;
+      return {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), source: 'osm'};
+    })
+    .catch(function() { return null; });
+}
+
+// Route between two lat/lng points via OSRM. Returns miles or null.
+function routeMiles(a, b) {
+  if (!a || !b) return Promise.resolve(null);
+  var key = a.lat.toFixed(4) + ',' + a.lng.toFixed(4) + '|' + b.lat.toFixed(4) + ',' + b.lng.toFixed(4);
+  if (ROUTE_CACHE[key] != null) return Promise.resolve(ROUTE_CACHE[key]);
+  if (!isOnline) return Promise.resolve(null);
+
+  // Try Google Distance Matrix first (more reliable, especially on cellular).
+  // Falls back to OSRM if Google Maps isn't loaded yet or the request fails.
+  return routeMilesGoogle(a, b).then(function(miles) {
+    if (miles != null) {
+      ROUTE_CACHE[key] = miles;
+      saveRoutes();
+      return miles;
+    }
+    return routeMilesOSRM(a, b).then(function(m2) {
+      if (m2 != null) {
+        ROUTE_CACHE[key] = m2;
+        saveRoutes();
+      }
+      return m2;
+    });
+  });
+}
+
+// Google Routes API via REST. Returns miles or null if unavailable.
+function routeMilesGoogle(a, b) {
+  var key = getGmapsKey();
+  if (!key) return Promise.resolve(null);
+  var url = 'https://routes.googleapis.com/directions/v2:computeRoutes?key=' + encodeURIComponent(key);
+  var body = {
+    origin:      {location: {latLng: {latitude: a.lat, longitude: a.lng}}},
+    destination: {location: {latLng: {latitude: b.lat, longitude: b.lng}}},
+    travelMode: 'DRIVE',
+    routingPreference: 'TRAFFIC_UNAWARE'
+  };
+  return fetchWithTimeout(url, 8000, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-FieldMask': 'routes.distanceMeters'
+    },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.routes || !data.routes.length) return null;
+      var meters = data.routes[0].distanceMeters;
+      if (!meters) return null;
+      return Math.round((meters / 1609.344) * 10) / 10;
+    })
+    .catch(function() { return null; });
+}
+
+// OSRM public server — fallback. Has an 8-second timeout so slow cellular
+// connections don't hang forever.
+function routeMilesOSRM(a, b) {
+  var url = 'https://router.project-osrm.org/route/v1/driving/' +
+            a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat +
+            '?overview=false';
+  return fetchWithTimeout(url, 8000)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || !data.routes || !data.routes.length) return null;
+      var meters = data.routes[0].distance;
+      return Math.round((meters / 1609.344) * 10) / 10;
+    })
+    .catch(function() { return null; });
+}
+
+function fetchWithTimeout(url, ms, options) {
+  options = options || {};
+  return new Promise(function(resolve, reject) {
+    var done = false;
+    var t = setTimeout(function() {
+      if (done) return;
+      done = true;
+      reject(new Error('timeout'));
+    }, ms);
+    fetch(url, options).then(function(r) {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      resolve(r);
+    }).catch(function(e) {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      reject(e);
+    });
+  });
+}
+
+var CURRENT_MILES = null;
+
+function updateMiles() {
+  var startAddr = document.getElementById('f-start').value;
+  var stopAddr  = document.getElementById('f-stop').value;
+  var row = document.getElementById('miles-row');
+  var disp = document.getElementById('miles-display');
+  var stat = document.getElementById('miles-status');
+  CURRENT_MILES = null;
+
+  if (!startAddr || !stopAddr) { row.style.display = 'none'; return; }
+  if (startAddr === stopAddr) {
+    row.style.display = 'flex';
+    disp.textContent = '0 mi';
+    stat.textContent = 'Same location';
+    CURRENT_MILES = 0;
+    return;
+  }
+
+  row.style.display = 'flex';
+  disp.textContent = '...';
+  stat.textContent = isOnline ? 'Calculating...' : 'Offline - no distance';
+
+  if (!isOnline) return;
+
+  Promise.all([geocode(startAddr), geocode(stopAddr)]).then(function(pts) {
+    if (!pts[0] || !pts[1]) {
+      disp.textContent = '--';
+      stat.textContent = !pts[0] && !pts[1] ? 'Addresses not found' :
+                         !pts[0] ? 'Start address not found' : 'Stop address not found';
+      return;
+    }
+    routeMiles(pts[0], pts[1]).then(function(miles) {
+      if (miles == null) {
+        disp.textContent = '--';
+        stat.textContent = 'Route lookup failed';
+      } else {
+        disp.textContent = miles.toFixed(1) + ' mi';
+        stat.textContent = '';
+        CURRENT_MILES = miles;
+      }
+    });
+  });
+}
+
+// ── GOOGLE PLACES AUTOCOMPLETE ───────────────────────────────
+// Loads Google Places via REST API (no JS SDK). Works identically on
+// every browser - no SDK loading issues, no platform-specific quirks.
+// Uses the Places API (New) "Autocomplete" REST endpoint directly.
+
+var AC_SESSION = null;       // session token (string, reused across keystrokes for billing)
+var AC_DEBOUNCE = null;      // debounce timer
+var AC_ACTIVE_INPUT = null;  // input element being typed in
+var AC_LAST_ERROR = null;    // last error message - shown in UI for debugging
+
+function getGmapsKey() {
+  return EMBEDDED_CONFIG.googleMapsApiKey || '';
+}
+
+function saveGmapsKey() {
+  var v = document.getElementById('gmaps-key').value.trim();
+  try {
+    localStorage.setItem('la_gmaps_key', v);
+    document.getElementById('gmaps-key-saved').style.display = 'inline-block';
+  } catch(e) {}
+}
+
+// No-op kept for compatibility with old callsites
+function loadGoogleMaps() {}
+function onGmapsReady() {}
+var GMAPS_LOADED = true; // always "ready" since we use REST
+var GMAPS_LOADING = false;
+
+// Iowa-region location bias (rectangle covering IA + neighbors)
+var IOWA_BIAS = {
+  rectangle: {
+    low:  { latitude: 37.0, longitude: -98.0 },
+    high: { latitude: 46.0, longitude: -87.0 }
+  }
+};
+
+// Generate a random session token (for billing purposes, Google reuses
+// across keystrokes that belong to one user "session").
+function makeSessionToken() {
+  return 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+function onAddrInput(input, listId) {
+  AC_ACTIVE_INPUT = input;
+  var q = input.value.trim();
+  var list = document.getElementById(listId);
+  if (q.length < 3) { list.classList.remove('show'); return; }
+  var key = getGmapsKey();
+  if (!key) {
+    showAcError(list, 'No Google Maps key. Edit EMBED_GOOGLE_MAPS_KEY in the HTML.');
+    return;
+  }
+  if (AC_DEBOUNCE) clearTimeout(AC_DEBOUNCE);
+  AC_DEBOUNCE = setTimeout(function() { fetchSuggestionsREST(q, list); }, 250);
+}
+
+// Direct REST call to Places API (New) - works on every browser.
+function fetchSuggestionsREST(input, list) {
+  var key = getGmapsKey();
+  if (!key) return;
+  if (!AC_SESSION) AC_SESSION = makeSessionToken();
+
+  var body = {
+    input: input,
+    locationBias: IOWA_BIAS,
+    includedRegionCodes: ['us'],
+    sessionToken: AC_SESSION
+  };
+
+  fetchWithTimeout('https://places.googleapis.com/v1/places:autocomplete?key=' + encodeURIComponent(key), 8000, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  }).then(function(r) {
+    return r.json().then(function(data) { return {status: r.status, data: data}; });
+  }).then(function(res) {
+    if (res.status !== 200) {
+      var msg = (res.data && res.data.error && res.data.error.message) || ('HTTP ' + res.status);
+      showAcError(list, msg);
+      return;
+    }
+    renderSuggestionsREST(res.data.suggestions || [], list);
+  }).catch(function(err) {
+    showAcError(list, 'Network error: ' + (err.message || err));
+  });
+}
+
+function showAcError(list, msg) {
+  AC_LAST_ERROR = msg;
+  list.innerHTML = '<div class="ac-error">⚠ ' + esc(msg) + '</div>';
+  list.classList.add('show');
+}
+
+function renderSuggestionsREST(suggestions, list) {
+  if (!suggestions.length) {
+    list.innerHTML = '<div class="ac-error" style="color:var(--text-3)">No matches found</div>';
+    list.classList.add('show');
+    return;
+  }
+  list.innerHTML = '';
+  suggestions.forEach(function(s) {
+    var p = s.placePrediction;
+    if (!p) return;
+    var item = document.createElement('div');
+    item.className = 'ac-item';
+    var main = (p.structuredFormat && p.structuredFormat.mainText && p.structuredFormat.mainText.text)
+            || (p.text && p.text.text) || '';
+    var sub = (p.structuredFormat && p.structuredFormat.secondaryText && p.structuredFormat.secondaryText.text) || '';
+    item.innerHTML = '<div class="ac-item-main">' + esc(main) + '</div>' +
+                     (sub ? '<div class="ac-item-sub">' + esc(sub) + '</div>' : '');
+    // Use both mousedown and touchstart so it works on mobile
+    var handler = function(e) {
+      e.preventDefault();
+      selectSuggestionREST(p);
+    };
+    item.addEventListener('mousedown', handler);
+    item.addEventListener('touchstart', handler);
+    list.appendChild(item);
+  });
+  var foot = document.createElement('div');
+  foot.className = 'ac-footer';
+  foot.textContent = 'powered by Google';
+  list.appendChild(foot);
+  list.classList.add('show');
+}
+
+function selectSuggestionREST(prediction) {
+  if (!AC_ACTIVE_INPUT) return;
+  var key = getGmapsKey();
+  if (!key) return;
+  // Fetch place details via REST: GET https://places.googleapis.com/v1/places/{place_id}
+  var placeId = prediction.placeId;
+  if (!placeId) return;
+  var url = 'https://places.googleapis.com/v1/places/' + encodeURIComponent(placeId) +
+            '?key=' + encodeURIComponent(key) +
+            '&fields=formattedAddress,displayName,location' +
+            '&sessionToken=' + encodeURIComponent(AC_SESSION || '');
+  fetchWithTimeout(url, 8000)
+    .then(function(r) { return r.json(); })
+    .then(function(place) {
+      if (!place || place.error) {
+        alert('Could not get place details: ' + (place && place.error && place.error.message || 'unknown'));
+        return;
+      }
+      var addr = place.formattedAddress || '';
+      var name = (place.displayName && place.displayName.text) || '';
+      AC_ACTIVE_INPUT.value = addr;
+      if (place.location) {
+        GEO_CACHE[addr.trim().toLowerCase()] = {
+          lat: place.location.latitude,
+          lng: place.location.longitude,
+          source: 'gmaps'
+        };
+        saveGeo();
+      }
+      var nameInput = AC_ACTIVE_INPUT.id === 'new-start-addr'
+        ? document.getElementById('new-start-name')
+        : (AC_ACTIVE_INPUT.id === 'new-stop-addr' ? document.getElementById('new-stop-name') : null);
+      if (nameInput && !nameInput.value.trim() && name) nameInput.value = name;
+      document.querySelectorAll('.ac-list').forEach(function(l) { l.classList.remove('show'); });
+      AC_SESSION = null; // session ends on selection
+    })
+    .catch(function(err) {
+      alert('Place details fetch failed: ' + (err.message || err));
+    });
+}
+
+function hideAcSoon(listId) {
+  setTimeout(function() {
+    var list = document.getElementById(listId);
+    if (list) list.classList.remove('show');
+  }, 200);
+}
+
+// ── FIREBASE SHARED-SETTINGS SYNC ────────────────────────────
+// One Firestore doc holds the shared DATA object (drivers, trucks,
+// trailers, locations, commodities). All driver devices read/write
+// the same doc, so adding a location on one phone shows up on all.
+//
+// Per-device config (Apps Script URL, API keys, company name,
+// offline queue) is NOT synced — those stay in localStorage.
+
+var FB_READY = false;        // true once Firestore is connected + listening
+var FB_APP = null;
+var FB_DB = null;
+var FB_DOC = null;
+var FB_PUSH_TIMER = null;
+var FB_APPLYING_REMOTE = false; // suppress push while applying remote update
+
+function getFbConfig() {
+  try {
+    var raw = localStorage.getItem('la_fb_config');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function saveFbConfig() {
+  var raw = document.getElementById('fb-config').value.trim();
+  if (!raw) {
+    try { localStorage.removeItem('la_fb_config'); } catch(e) {}
+    setFbStatus('off', 'Not configured');
+    return;
+  }
+  var cfg = parseFbConfig(raw);
+  if (!cfg) {
+    setFbStatus('err', 'Could not parse config — see chat for format');
+    return;
+  }
+  if (!cfg.projectId || !cfg.apiKey) {
+    setFbStatus('err', 'Config missing projectId or apiKey');
+    return;
+  }
+  try { localStorage.setItem('la_fb_config', JSON.stringify(cfg)); } catch(e) {}
+  setFbStatus('loading', 'Connecting...');
+  initFirebase(cfg);
+}
+
+// Accepts any of these forms:
+//   { "apiKey": "...", ... }            (pure JSON)
+//   const firebaseConfig = { ... };     (JS const declaration)
+//   The full snippet copy/pasted from Firebase Console (with imports, comments, etc.)
+function parseFbConfig(raw) {
+  return _parseFirebaseConfigText(raw);
+}
+
+function setFbStatus(state, text) {
+  var dot = document.getElementById('fb-status-dot');
+  var txt = document.getElementById('fb-status-text');
+  if (!dot || !txt) return;
+  var colors = {off: '#999', loading: '#e6a800', ok: '#1f8a3a', err: '#c0392b'};
+  dot.style.background = colors[state] || '#999';
+  txt.textContent = text;
+}
+
+function initFirebase(cfg) {
+  // Load Firebase modular SDK from CDN, then wire up Firestore.
+  Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js')
+  ]).then(function(mods) {
+    var fbApp = mods[0], fbFs = mods[1];
+    FB_APP = fbApp.initializeApp(cfg, 'load-log-' + Date.now());
+    FB_DB = fbFs.getFirestore(FB_APP);
+    // Single shared doc: settings/shared
+    FB_DOC = fbFs.doc(FB_DB, 'settings', 'shared');
+
+    // Live listener: any change on the server pushes here.
+    fbFs.onSnapshot(FB_DOC, function(snap) {
+      if (!snap.exists()) {
+        // First time use — seed the doc with current local DATA + caches
+        fbFs.setDoc(FB_DOC, {
+          data: DATA,
+          geoCache: GEO_CACHE,
+          routeCache: ROUTE_CACHE,
+          updatedAt: Date.now()
+        });
+        setFbStatus('ok', 'Synced (initial)');
+        FB_READY = true;
+        return;
+      }
+      var remote = snap.data();
+      if (!remote) return;
+      FB_APPLYING_REMOTE = true;
+      if (remote.data) {
+        DATA = remote.data;
+        try { localStorage.setItem('la_data', JSON.stringify(DATA)); } catch(e) {}
+      }
+      if (remote.geoCache) {
+        GEO_CACHE = remote.geoCache;
+        saveGeo();
+      }
+      if (remote.routeCache) {
+        ROUTE_CACHE = remote.routeCache;
+        saveRoutes();
+      }
+      renderAll();
+      FB_APPLYING_REMOTE = false;
+      FB_READY = true;
+      var when = remote.updatedAt ? new Date(remote.updatedAt).toLocaleTimeString() : '';
+      setFbStatus('ok', 'Synced' + (when ? ' • ' + when : ''));
+    }, function(err) {
+      console.error('Firestore listener error:', err);
+      setFbStatus('err', 'Sync error: ' + (err.code || err.message || 'unknown'));
+      FB_READY = false;
+    });
+
+    // Save the writer for use by scheduleFbPush
+    FB_DB._setDoc = fbFs.setDoc;
+  }).catch(function(err) {
+    console.error('Firebase load failed:', err);
+    setFbStatus('err', 'Could not load Firebase SDK');
+  });
+}
+
+function scheduleFbPush() {
+  // Debounce: collapse rapid changes into one write 500ms after last edit.
+  if (FB_PUSH_TIMER) clearTimeout(FB_PUSH_TIMER);
+  FB_PUSH_TIMER = setTimeout(pushToFirebase, 500);
+}
+
+function pushToFirebase() {
+  if (!FB_READY || !FB_DB || !FB_DOC) return;
+  FB_DB._setDoc(FB_DOC, {
+    data: DATA,
+    geoCache: GEO_CACHE,
+    routeCache: ROUTE_CACHE,
+    updatedAt: Date.now()
+  }).then(function() {
+    setFbStatus('ok', 'Synced • just now');
+  }).catch(function(err) {
+    console.error('Firestore push failed:', err);
+    setFbStatus('err', 'Push failed: ' + (err.code || err.message || 'unknown'));
+  });
+}
+
+// ── ONLINE / OFFLINE ──────────────────────────────────────────
+function updateOnlineStatus() {
+  isOnline = navigator.onLine;
+  var dot = document.getElementById('status-dot');
+  var txt = document.getElementById('status-txt');
+  var banner = document.getElementById('offline-banner');
+  dot.className = 'status-dot ' + (isOnline ? 'online' : 'offline');
+  txt.textContent = isOnline ? 'Online' : 'Offline';
+  banner.classList.toggle('show', !isOnline);
+  updateQueueBanner();
+  if (isOnline && QUEUE.length > 0) retryQueue();
+}
+
+window.addEventListener('online', function() { updateOnlineStatus(); });
+window.addEventListener('offline', function() { updateOnlineStatus(); });
+
+function updateQueueBanner() {
+  var b = document.getElementById('queue-banner');
+  var t = document.getElementById('queue-banner-txt');
+  var badge = document.getElementById('queue-badge');
+  var countEl = document.getElementById('queue-count-display');
+  if (QUEUE.length > 0) {
+    b.classList.add('show');
+    t.textContent = QUEUE.length + ' load' + (QUEUE.length > 1 ? 's' : '') + ' waiting to send';
+    badge.textContent = QUEUE.length;
+    badge.classList.add('show');
+  } else {
+    b.classList.remove('show');
+    badge.classList.remove('show');
+  }
+  if (countEl) countEl.textContent = QUEUE.length;
+}
+
+// ── TIMESTAMP ─────────────────────────────────────────────────
+function updateTimestamp() {
+  var now = new Date();
+  document.getElementById('ts-display').textContent = 'Stamped: ' + now.toLocaleString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit'
+  });
+}
+updateTimestamp();
+setInterval(updateTimestamp, 30000);
+
+// ── SCREENS ───────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-queue') renderQueueScreen();
+  if (id === 'screen-settings') updateQueueBanner();
+  if (id === 'screen-history') renderHistoryScreen();
+}
+
+// ── SETTINGS TABS ─────────────────────────────────────────────
+function setTab(i) {
+  [0,1,2,3].forEach(function(j) {
+    document.getElementById('tab-' + j).style.display = j === i ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach(function(t, j) {
+    t.classList.toggle('active', j === i);
+  });
+}
+
+// ── RENDER DROPDOWNS ──────────────────────────────────────────
+function renderSelect(id, items, isLoc) {
+  var el = document.getElementById(id);
+  var cur = el.value;
+  el.innerHTML = '<option value="">' + el.options[0].text + '</option>';
+  items.forEach(function(item) {
+    var o = document.createElement('option');
+    if (isLoc) { o.value = item.addr; o.textContent = item.name; }
+    else { o.value = item; o.textContent = item; }
+    el.appendChild(o);
+  });
+  if (cur) el.value = cur;
+}
+
+function renderSimpleList(containerId, key) {
+  var c = document.getElementById(containerId);
+  if (!DATA[key] || DATA[key].length === 0) {
+    c.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text-3)">None added yet.</div>';
+    return;
+  }
+  c.innerHTML = '';
+  DATA[key].forEach(function(item, i) {
+    var row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = '<div class="item-main"><div class="item-name">' + esc(item) + '</div></div>' +
+      '<button class="del-btn" onclick="removeSimple(\'' + key + '\',' + i + ')" aria-label="Remove">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    c.appendChild(row);
+  });
+}
+
+function renderLocList(containerId, key) {
+  var c = document.getElementById(containerId);
+  if (!DATA[key] || DATA[key].length === 0) {
+    c.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--text-3)">None added yet.</div>';
+    return;
+  }
+  c.innerHTML = '';
+  DATA[key].forEach(function(item, i) {
+    var row = document.createElement('div');
+    row.className = 'item-row';
+    var cached = item.addr && GEO_CACHE[item.addr.trim().toLowerCase()];
+    var pill, mapLink = '', coordLine = '';
+    if (cached) {
+      var srcLabel = cached.source === 'census' ? 'Census' :
+                     cached.source === 'gmaps' ? 'Google' : 'OSM';
+      pill = '<span class="geo-pill geo-ok" title="' + esc(srcLabel) + '">&#10003;</span>';
+      var mapUrl = 'https://www.openstreetmap.org/?mlat=' + cached.lat + '&mlon=' + cached.lng + '&zoom=15';
+      mapLink = ' <a href="' + mapUrl + '" target="_blank" rel="noopener" class="map-link">view on map</a>';
+      coordLine = '<div class="item-coord">' + cached.lat.toFixed(4) + ', ' + cached.lng.toFixed(4) +
+                  ' &middot; ' + srcLabel + mapLink + '</div>';
+    } else {
+      pill = '<span class="geo-pill geo-unk">?</span>';
+    }
+    var testBtn = item.addr
+      ? '<button class="test-btn" onclick="testGeocode(\'' + key + '\',' + i + ')" aria-label="Test address">Test</button>'
+      : '';
+    row.innerHTML = '<div class="item-main">' +
+      '<div class="item-name">' + pill + ' ' + esc(item.name) + '</div>' +
+      (item.addr ? '<div class="item-sub">' + esc(item.addr) + '</div>' : '<div class="item-sub" style="color:var(--red)">No address &mdash; no mileage</div>') +
+      coordLine +
+      '</div>' +
+      testBtn +
+      '<button class="del-btn" onclick="removeLoc(\'' + key + '\',' + i + ')" aria-label="Remove">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+    c.appendChild(row);
+  });
+}
+
+// Test an address — geocodes immediately and shows result inline.
+function testGeocode(key, i) {
+  var item = DATA[key][i];
+  if (!item || !item.addr) return;
+  if (!isOnline) { alert('Offline — connect to test address.'); return; }
+  // Force a fresh lookup by clearing the cache entry first
+  var ck = item.addr.trim().toLowerCase();
+  delete GEO_CACHE[ck];
+  saveGeo();
+  // Re-render to show "?" while testing
+  renderAll();
+  geocode(item.addr).then(function(pt) {
+    renderAll();
+    if (!pt) {
+      alert('Address not found:\n\n' + item.name + '\n' + item.addr +
+            '\n\nTry: full street number (not a range), city, state, ZIP.');
+    }
+  });
+}
+
+// Re-test every location address. Wipes the geocode AND route caches so
+// stale wrong-state results get cleared, then geocodes everything fresh
+// one at a time (to be polite to free public services).
+function retestAllGeocodes() {
+  if (!isOnline) { alert('Offline — connect to re-test.'); return; }
+  if (!confirm('Clear all cached coordinates and re-geocode every address?\n\nThis fixes any addresses that previously matched the wrong location.')) return;
+  GEO_CACHE = {};
+  ROUTE_CACHE = {};
+  saveGeo();
+  saveRoutes();
+  renderAll();
+  var all = [].concat(DATA.starts || [], DATA.stops || []).filter(function(x) { return x.addr; });
+  var failed = [];
+  function next(idx) {
+    if (idx >= all.length) {
+      renderAll();
+      if (failed.length) {
+        alert('Done. ' + (all.length - failed.length) + ' geocoded, ' + failed.length + ' failed:\n\n' +
+              failed.map(function(f) { return '• ' + f.name; }).join('\n'));
+      } else {
+        alert('Done — all ' + all.length + ' addresses geocoded successfully.');
+      }
+      return;
+    }
+    geocode(all[idx].addr).then(function(pt) {
+      if (!pt) failed.push(all[idx]);
+      renderAll();
+      setTimeout(function() { next(idx + 1); }, 250); // ~4 req/sec, well under any limit
+    });
+  }
+  next(0);
+}
+
+function renderAll() {
+  renderSelect('f-driver', DATA.drivers, false);
+  renderSelect('f-truck', DATA.trucks, false);
+  renderSelect('f-trailer', DATA.trailers, false);
+  renderSelect('f-haul', DATA.haul, false);
+  renderSelect('f-start', DATA.starts, true);
+  renderSelect('f-stop', DATA.stops, true);
+  renderSimpleList('list-drivers', 'drivers');
+  renderSimpleList('list-trucks', 'trucks');
+  renderSimpleList('list-trailers', 'trailers');
+  renderSimpleList('list-haul', 'haul');
+  renderLocList('list-starts', 'starts');
+  renderLocList('list-stops', 'stops');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── ADD / REMOVE ──────────────────────────────────────────────
+function addSimple(key, inputId) {
+  var v = document.getElementById(inputId).value.trim();
+  if (!v) return;
+  DATA[key].push(v);
+  saveData(); renderAll();
+  document.getElementById(inputId).value = '';
+}
+function removeSimple(key, i) {
+  DATA[key].splice(i, 1);
+  saveData(); renderAll();
+}
+function addLocation(key, nameId, addrId) {
+  var n = document.getElementById(nameId).value.trim();
+  var a = document.getElementById(addrId).value.trim();
+  if (!n) return;
+  DATA[key].push({name: n, addr: a});
+  saveData(); renderAll();
+  document.getElementById(nameId).value = '';
+  document.getElementById(addrId).value = '';
+  // Pre-warm geocode cache so first load using this location is instant
+  if (a && isOnline) geocode(a);
+}
+function removeLoc(key, i) {
+  DATA[key].splice(i, 1);
+  saveData(); renderAll();
+}
+
+// ── FORM SUBMIT ───────────────────────────────────────────────
+function gv(id) { return document.getElementById(id).value.trim(); }
+
+function submitLoad(repeat) {
+  var driver  = gv('f-driver'),  truck   = gv('f-truck'),
+      trailer = gv('f-trailer'), start   = gv('f-start'),
+      stop    = gv('f-stop'),    haul    = gv('f-haul'),
+      notes   = gv('f-notes');
+  var tonsRaw = gv('f-tons');
+  var tons = tonsRaw === '' ? null : parseFloat(tonsRaw);
+  if (tons != null && (isNaN(tons) || tons < 0)) tons = null;
+
+  var err = document.getElementById('err-msg');
+  if (!driver || !truck || !trailer || !start || !stop || !haul) {
+    err.style.display = 'block'; return;
+  }
+  err.style.display = 'none';
+
+  var startSel = document.getElementById('f-start');
+  var stopSel  = document.getElementById('f-stop');
+  var startLabel = startSel.options[startSel.selectedIndex].text;
+  var stopLabel  = stopSel.options[stopSel.selectedIndex].text;
+
+  var payload = {
+    timestamp: new Date().toISOString(),
+    driver, truck, trailer,
+    startLocation: start, startLabel,
+    stopLocation: stop, stopLabel,
+    hauling: haul, notes,
+    miles: CURRENT_MILES,
+    tons: tons
+  };
+  lastPayload = {payload, startLabel, stopLabel};
+
+  var offline = sendPayload(payload);
+  showSuccess(payload, startLabel, stopLabel, offline);
+
+  if (repeat) document.getElementById('f-notes').value = '';
+}
+
+// ── SEND / QUEUE ──────────────────────────────────────────────
+function getScriptUrl() {
+  return EMBEDDED_CONFIG.appsScriptUrl || '';
+}
+
+function sendPayload(payload) {
+  var url = getScriptUrl();
+  if (!url || !isOnline) {
+    queuePayload(payload);
+    return true; // offline
+  }
+  // Use text/plain to dodge CORS preflight on Apps Script (it's a "simple request"
+  // that way). Server still parses JSON from the body.
+  fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function(res) {
+    if (!res || res.ok !== true) throw new Error('Server reported failure');
+    // Success - nothing more to do
+  }).catch(function() {
+    queuePayload(payload);
+    updateQueueBanner();
+  });
+  return false;
+}
+
+function queuePayload(payload) {
+  QUEUE.push(payload);
+  saveQueue();
+  updateQueueBanner();
+}
+
+function retryQueue() {
+  var url = getScriptUrl();
+  if (!url || !isOnline || QUEUE.length === 0) return;
+  var toSend = QUEUE.slice();
+  QUEUE = [];
+  saveQueue();
+  updateQueueBanner();
+  toSend.forEach(function(p) {
+    fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(p)
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(res) {
+      if (!res || res.ok !== true) throw new Error('Server reported failure');
+    }).catch(function() {
+      QUEUE.push(p);
+      saveQueue();
+      updateQueueBanner();
+    });
+  });
+}
+
+function clearQueue() {
+  if (QUEUE.length === 0) return;
+  if (!confirm('Delete all ' + QUEUE.length + ' pending load(s)? They will NOT be sent to your sheet.')) return;
+  QUEUE = [];
+  saveQueue();
+  updateQueueBanner();
+  renderQueueScreen();
+}
+
+function deleteAllLocations() {
+  var n = (DATA.starts || []).length + (DATA.stops || []).length;
+  if (n === 0) { alert('No locations to delete.'); return; }
+  if (!confirm('Delete all ' + n + ' pickup and delivery locations? This cannot be undone (use Export first if you want a backup). The geocode cache will also be wiped.')) return;
+  DATA.starts = [];
+  DATA.stops = [];
+  GEO_CACHE = {};
+  ROUTE_CACHE = {};
+  saveGeo();
+  saveRoutes();
+  saveData(); // also pushes to Firestore if sync is on, syncing the delete to all devices
+  renderAll();
+}
+
+// ── QUEUE SCREEN ──────────────────────────────────────────────
+function renderQueueScreen() {
+  var c = document.getElementById('queue-list');
+  if (QUEUE.length === 0) {
+    c.innerHTML = '<div class="queue-empty">No pending loads — all caught up!</div>';
+    return;
+  }
+  c.innerHTML = '';
+  QUEUE.forEach(function(p, i) {
+    var d = new Date(p.timestamp);
+    var t = d.toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    var div = document.createElement('div');
+    div.className = 'queue-item';
+    div.innerHTML =
+      '<div class="queue-item-hdr">' +
+        '<div class="queue-item-title">' + esc(p.startLabel) + ' &rarr; ' + esc(p.stopLabel) + '</div>' +
+        '<div class="queue-item-time">' + esc(t) + '</div>' +
+      '</div>' +
+      '<div class="queue-item-detail">' +
+        esc(p.driver) + ' &bull; ' + esc(p.truck) + ' / ' + esc(p.trailer) + ' &bull; ' + esc(p.hauling) +
+      '</div>';
+    c.appendChild(div);
+  });
+}
+
+// ── SUCCESS SCREEN ────────────────────────────────────────────
+function showSuccess(payload, startLabel, stopLabel, offline) {
+  // Always record locally regardless of whether send succeeded — driver
+  // can see what they submitted on this device, queued or sent.
+  appendLocalHistory(payload, offline);
+  showScreen('screen-success');
+  var d = new Date(payload.timestamp);
+  var t = d.toLocaleString('en-US', {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  document.getElementById('success-sub').textContent = offline
+    ? 'Saved on device — will send when signal returns.'
+    : 'Saved to your sheet.';
+  document.getElementById('success-offline-note').style.display = offline ? 'block' : 'none';
+  document.getElementById('success-detail').innerHTML =
+    srow('Time', t) + srow('Driver', payload.driver) +
+    srow('Equipment', payload.truck + ' / ' + payload.trailer) +
+    srow('Route', startLabel + ' \u2192 ' + stopLabel) +
+    (payload.miles != null ? srow('Distance', payload.miles.toFixed(1) + ' mi') : '') +
+    srow('Hauling', payload.hauling) +
+    (payload.tons != null ? srow('Tons', payload.tons.toFixed(1)) : '') +
+    (payload.notes ? srow('Notes', payload.notes) : '');
+}
+
+// ── LOAD HISTORY ──────────────────────────────────────────────
+// Local history of submissions from this device. Stored in localStorage.
+// Also pulls fleet-wide history from the Apps Script on demand.
+var LOCAL_HISTORY = [];
+var SHEET_HISTORY = []; // populated on Refresh from sheet
+
+function loadLocalHistory() {
+  try {
+    var h = localStorage.getItem('la_history');
+    if (h) LOCAL_HISTORY = JSON.parse(h);
+  } catch(e) {}
+}
+
+function saveLocalHistory() {
+  // Cap at 200 most recent so localStorage doesn't bloat
+  if (LOCAL_HISTORY.length > 200) {
+    LOCAL_HISTORY = LOCAL_HISTORY.slice(-200);
+  }
+  try { localStorage.setItem('la_history', JSON.stringify(LOCAL_HISTORY)); } catch(e) {}
+}
+
+function appendLocalHistory(payload, queuedOffline) {
+  LOCAL_HISTORY.push({
+    ts: payload.timestamp,
+    driver: payload.driver,
+    truck: payload.truck,
+    trailer: payload.trailer,
+    start: payload.startLabel,
+    stop: payload.stopLabel,
+    miles: payload.miles,
+    hauling: payload.hauling,
+    tons: payload.tons,
+    notes: payload.notes,
+    queued: !!queuedOffline,
+    source: 'local'
+  });
+  saveLocalHistory();
+}
+
+function renderHistoryScreen() {
+  var c = document.getElementById('history-list');
+  var entries;
+  if (SHEET_HISTORY.length) {
+    entries = SHEET_HISTORY.slice();
+    var srcLine = document.getElementById('history-source-line');
+    if (srcLine) srcLine.textContent = 'Showing ' + SHEET_HISTORY.length + ' loads from the sheet (full fleet history).';
+  } else {
+    entries = LOCAL_HISTORY.slice();
+    var srcLine2 = document.getElementById('history-source-line');
+    if (srcLine2) srcLine2.textContent = 'Showing loads submitted from this device. Tap "Refresh from sheet" to pull full fleet history.';
+  }
+  if (entries.length === 0) {
+    c.innerHTML = '<div class="queue-empty">No load history yet.</div>';
+    return;
+  }
+  // Group entries by local date string (YYYY-MM-DD)
+  var groups = {};
+  var groupOrder = []; // keeps date keys in insertion order
+  entries.forEach(function(h) {
+    var d = h.ts ? new Date(h.ts) : null;
+    if (!d || isNaN(d)) return;
+    var key = d.getFullYear() + '-' +
+              String(d.getMonth() + 1).padStart(2, '0') + '-' +
+              String(d.getDate()).padStart(2, '0');
+    if (!groups[key]) {
+      groups[key] = {date: d, items: []};
+      groupOrder.push(key);
+    }
+    groups[key].items.push(h);
+  });
+  // Sort group keys newest first
+  groupOrder.sort(function(a, b) { return b.localeCompare(a); });
+  // Within each group, newest first too
+  groupOrder.forEach(function(k) {
+    groups[k].items.sort(function(a, b) { return (b.ts || '').localeCompare(a.ts || ''); });
+  });
+
+  c.innerHTML = '';
+  groupOrder.forEach(function(key) {
+    var g = groups[key];
+    var items = g.items;
+    // Daily totals
+    var totalMiles = 0, totalTons = 0, hasMiles = false, hasTons = false;
+    items.forEach(function(h) {
+      var m = parseFloat(h.miles); if (!isNaN(m)) { totalMiles += m; hasMiles = true; }
+      var t = parseFloat(h.tons);  if (!isNaN(t)) { totalTons += t; hasTons = true; }
+    });
+    var dayLabel = formatDayHeader(g.date);
+    var header = document.createElement('div');
+    header.className = 'history-day-header';
+    header.innerHTML =
+      '<div class="history-day-title">' + esc(dayLabel) + '</div>' +
+      '<div class="history-day-totals">' +
+        items.length + ' load' + (items.length === 1 ? '' : 's') +
+        (hasMiles ? ' &middot; ' + totalMiles.toFixed(1) + ' mi' : '') +
+        (hasTons ? ' &middot; ' + totalTons.toFixed(1) + ' tons' : '') +
+      '</div>';
+    c.appendChild(header);
+
+    items.forEach(function(h) {
+      var d = h.ts ? new Date(h.ts) : null;
+      var when = d && !isNaN(d) ? d.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'}) : (h.ts || '');
+      var div = document.createElement('div');
+      div.className = 'history-item ' + (h.source === 'sheet' ? 'from-sheet' : 'from-local');
+      div.innerHTML =
+        '<div class="history-item-hdr">' +
+          '<div class="history-item-title">' + esc(h.start || '?') + ' \u2192 ' + esc(h.stop || '?') + '</div>' +
+          '<div class="history-item-time">' + esc(when) + '</div>' +
+        '</div>' +
+        '<div class="history-item-detail">' +
+          '<span class="lbl">Driver:</span> ' + esc(h.driver || '') +
+          ' &middot; <span class="lbl">Equipment:</span> ' + esc((h.truck || '') + ' / ' + (h.trailer || '')) +
+          (h.miles != null && h.miles !== '' ? ' &middot; <span class="lbl">Miles:</span> ' + esc(String(h.miles)) : '') +
+          (h.tons != null && h.tons !== '' ? ' &middot; <span class="lbl">Tons:</span> ' + esc(String(h.tons)) : '') +
+          ' &middot; <span class="lbl">Hauling:</span> ' + esc(h.hauling || '') +
+          (h.notes ? '<br><span class="lbl">Notes:</span> ' + esc(h.notes) : '') +
+          (h.queued ? '<br><span style="color:#e6a800;font-weight:600">&#9203; Queued (not yet sent)</span>' : '') +
+        '</div>';
+      c.appendChild(div);
+    });
+  });
+}
+
+function formatDayHeader(d) {
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var that = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var diffDays = Math.round((today - that) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  // Within the last week, show day name
+  if (diffDays > 1 && diffDays < 7) {
+    return d.toLocaleDateString('en-US', {weekday: 'long'});
+  }
+  // Otherwise full date
+  return d.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric', year: today.getFullYear() === d.getFullYear() ? undefined : 'numeric'});
+}
+
+function refreshHistoryFromSheet() {
+  var url = getScriptUrl();
+  if (!url) { alert('No Apps Script URL configured.'); return; }
+  if (!isOnline) { alert('Offline — connect to refresh.'); return; }
+  var btn = document.getElementById('history-refresh-btn');
+  if (btn) { btn.textContent = 'Loading...'; btn.disabled = true; }
+  // GET request with ?action=list — Apps Script returns last N loads
+  fetchWithTimeout(url + '?action=list&n=100', 12000)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || data.ok !== true || !Array.isArray(data.loads)) {
+        throw new Error(data && data.error ? data.error : 'Bad response from sheet');
+      }
+      SHEET_HISTORY = data.loads.map(function(row) {
+        return {
+          ts: row.timestamp || '',
+          driver: row.driver || '',
+          truck: row.truck || '',
+          trailer: row.trailer || '',
+          start: row.start || '',
+          stop: row.stop || '',
+          miles: row.miles,
+          hauling: row.hauling || '',
+          tons: row.tons,
+          notes: row.notes || '',
+          source: 'sheet'
+        };
+      });
+      renderHistoryScreen();
+    })
+    .catch(function(err) {
+      alert('Could not load from sheet: ' + (err.message || err) +
+            '\n\nMake sure your Apps Script has the latest Code.gs that includes the doGet list handler.');
+    })
+    .finally(function() {
+      if (btn) { btn.textContent = 'Refresh from sheet'; btn.disabled = false; }
+    });
+}
+
+function srow(l, v) {
+  return '<div class="s-row"><span class="s-lbl">' + esc(l) + '</span><span class="s-val">' + esc(v) + '</span></div>';
+}
+
+function newLoad() {
+  showScreen('screen-form');
+  ['f-driver','f-truck','f-trailer','f-start','f-stop','f-haul'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-tons').value = '';
+  document.getElementById('miles-row').style.display = 'none';
+  CURRENT_MILES = null;
+}
+
+function repeatFromSuccess() {
+  showScreen('screen-form');
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-tons').value = '';
+  submitLoad(false);
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────────
+function exportSettings() {
+  var url = document.getElementById('script-url').value.trim();
+  var company = document.getElementById('company-input').value.trim();
+  var bundle = {
+    _version: 1,
+    _exported: new Date().toISOString(),
+    data: DATA,
+    scriptUrl: url,
+    company: company
+  };
+  var blob = new Blob([JSON.stringify(bundle, null, 2)], {type: 'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  var date = new Date().toISOString().slice(0,10);
+  a.download = 'trucking-settings-' + date + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importSettings(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var msg = document.getElementById('import-msg');
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var bundle = JSON.parse(e.target.result);
+      if (!bundle._version || !bundle.data) throw new Error('Invalid file');
+
+      // Restore data
+      DATA = bundle.data;
+      saveData();
+
+      // Restore URL
+      if (bundle.scriptUrl) {
+        document.getElementById('script-url').value = bundle.scriptUrl;
+        try { localStorage.setItem('la_url', bundle.scriptUrl); } catch(err) {}
+      }
+
+      // Restore company name
+      if (bundle.company) {
+        document.getElementById('company-input').value = bundle.company;
+        document.getElementById('company-hdr').textContent = bundle.company;
+        try { localStorage.setItem('la_company', bundle.company); } catch(err) {}
+      }
+
+      renderAll();
+      msg.style.color = 'var(--green)';
+      msg.textContent = '✓ Settings imported successfully';
+      msg.style.display = 'block';
+      setTimeout(function() { msg.style.display = 'none'; }, 3000);
+    } catch(err) {
+      msg.style.color = 'var(--red)';
+      msg.textContent = '✗ Invalid file — please use an exported settings file';
+      msg.style.display = 'block';
+      setTimeout(function() { msg.style.display = 'none'; }, 4000);
+    }
+    // Reset file input so same file can be re-imported if needed
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+loadStorage();
+loadCaches();
+loadLocalHistory();
+renderAll();
+updateOnlineStatus();
+
+// Auto-retry queue every 30 seconds when online
+setInterval(function() {
+  if (isOnline && QUEUE.length > 0) retryQueue();
+}, 30000);
+</script>
+</body>
+</html>
